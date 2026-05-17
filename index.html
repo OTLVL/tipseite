@@ -286,15 +286,6 @@ body::after {
 .pay-btn-main:hover { background: var(--purple2); box-shadow: 0 6px 32px rgba(124,58,237,0.6); transform: translateY(-2px); }
 .pay-btn-main:active { transform: scale(0.98); }
 
-.pay-btn-demo {
-  width: 100%; padding: 11px;
-  background: transparent; color: var(--muted);
-  border: 1.5px dashed var(--border); border-radius: 10px;
-  font-family: 'Barlow', sans-serif; font-size: 0.82rem;
-  cursor: pointer; transition: all 0.15s;
-}
-.pay-btn-demo:hover { border-color: var(--purple); color: var(--light); }
-
 /* ── SUCCESS ── */
 .success-screen { display: none; text-align: center; padding: 60px 20px; animation: fadeUp 0.5s ease both; }
 .success-screen.show { display: block; }
@@ -401,7 +392,6 @@ footer {
 
     <div class="payment-section">
       <button class="pay-btn-main" onclick="pay()">Jetzt Donaten ▶</button>
-      <button class="pay-btn-demo" onclick="simulate()">🧪 Demo ohne Zahlung</button>
     </div>
 
   </div>
