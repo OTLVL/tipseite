@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>OTLVL · Alert</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: transparent;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.alert {
+  position: fixed;
+  bottom: 60px;
+  left: 60px;
+  background: rgba(14,10,24,0.95);
+  border-left: 5px solid #9b59ff;
+  border-radius: 6px;
+  padding: 18px 28px;
+  min-width: 320px;
+  box-shadow: 0 0 40px rgba(155,89,255,0.3);
+  transform: translateX(-120%);
+  opacity: 0;
+  transition: none;
+}
+.alert.in {
+  transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+  transform: translateX(0);
+  opacity: 1;
+}
+.alert.out {
+  transition: transform 0.35s ease-in, opacity 0.3s;
+  transform: translateX(-120%);
+  opacity: 0;
+}
+
+.alert-name {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.alert-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 4px;
+}
+.alert-action {
+  font-size: 0.9rem;
+  color: #7c6fa0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.alert-amount {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #9b59ff;
+  letter-spacing: 1px;
+}
+
+.timer {
+  height: 2px;
+  background: rgba(155,89,255,0.15);
+  margin-top: 14px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.timer-fill {
+  height: 100%;
+  background: #9b59ff;
+  width: 100%;
+  transform-origin: left;
+}
+</style>
+</head>
+<body>
+
+<div class="alert" id="alert">
+  <div class="alert-name" id="alertName">Username</div>
+  <div class="alert-row">
+    <div class="alert-action">hat getippt</div>
+    <div class="alert-amount" id="alertAmount">5,00 €</div>
+  </div>
+  <div class="timer"><div class="timer-fill" id="timerFill"></div></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://oqbvqcruqwmxlboyyvzw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xYnZxY3J1cXdteGxib3l5dnp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NjU5MjksImV4cCI6MjA5NDU0MTkyOX0.gtfZ9eS5f2KLDKo_7cu5aXzSBixNtF-AJ9QAzniq4dc';
+const DURATION = 5000;
+
+let queue = [], showing = false, lastId = 0;
+const el     = document.getElementById('alert');
+const nameEl = document.getElementById('alertName');
+const amtEl  = document.getElementById('alertAmount');
+const timer  = document.getElementById('timerFill');
+
+function showNext() {
+  if (showing || !queue.length) return;
+  showing = true;
+  const d = queue.shift();
+  nameEl.textContent = d.name;
+  amtEl.textContent  = d.total.toFixed(2).replace('.', ',') + ' €';
+  el.classList.remove('out');
+  void el.offsetWidth;
+  el.classList.add('in');
+  timer.style.transition = 'none';
+  timer.style.transform = 'scaleX(1)';
+  void timer.offsetWidth;
+  timer.style.transition = `transform ${DURATION}ms linear`;
+  timer.style.transform = 'scaleX(0)';
+  setTimeout(() => {
+    el.classList.remove('in');
+    el.classList.add('out');
+    setTimeout(() => { showing = false; showNext(); }, 400);
+  }, DURATION);
+}
+
+async function poll() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/donations?order=id.desc&limit=1`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if (data?.length && data[0].id > lastId) {
+      lastId = data[0].id;
+      queue.push(data[0]);
+      showNext();
+    }
+  } catch(e) {}
+}
+
+fetch(`${SUPABASE_URL}/rest/v1/donations?order=id.desc&limit=1`, {
+  headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+}).then(r => r.json()).then(d => { if (d?.length) lastId = d[0].id; }).catch(() => {});
+
+setInterval(poll, 2000);
+</script>
+</body>
+</html>
