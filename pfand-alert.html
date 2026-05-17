@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>PfandMat — Alert Overlay</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Courier+Prime:wght@700&display=swap');
+
+/* ── OTLVL FARBEN ── */
+:root {
+  --purple:   #9b59ff;   /* Haupt-Lila */
+  --purple2:  #7c3aed;   /* dunkler Lila */
+  --magenta:  #e040fb;   /* Pink-Magenta Highlight */
+  --dark:     #0e0a18;   /* fast schwarz mit Lila-Stich */
+  --dark2:    #1a1030;   /* Card Hintergrund */
+  --text:     #f0eaff;
+  --muted:    #7060a0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: transparent;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  position: relative;
+  font-family: 'Syne', sans-serif;
+}
+
+/* ── ALERT CARD ── */
+.alert-wrap {
+  position: fixed;
+  bottom: 60px;
+  left: 60px;
+  width: 500px;
+  pointer-events: none;
+}
+
+.alert-card {
+  background: rgba(14, 10, 24, 0.97);
+  border: 2px solid var(--purple);
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(155,89,255,0.12),
+    0 0 50px rgba(155,89,255,0.35),
+    0 0 100px rgba(224,64,251,0.15),
+    0 24px 60px rgba(0,0,0,0.9);
+  transform: translateX(-560px) scale(0.85);
+  opacity: 0;
+  transition: none;
+}
+
+.alert-card.entering {
+  transition: transform 0.55s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+  transform: translateX(0) scale(1);
+  opacity: 1;
+}
+
+.alert-card.leaving {
+  transition: transform 0.4s cubic-bezier(0.55,0,1,0.45), opacity 0.35s ease;
+  transform: translateX(-560px) scale(0.85);
+  opacity: 0;
+}
+
+/* shimmer bar top — Lila → Magenta → Lila */
+.alert-accent {
+  height: 4px;
+  background: linear-gradient(90deg, var(--purple2), var(--purple), var(--magenta), var(--purple), var(--purple2));
+  background-size: 300% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.alert-inner {
+  padding: 20px 24px 22px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  /* subtle lila radial glow background */
+  background: radial-gradient(ellipse at 0% 50%, rgba(155,89,255,0.07), transparent 70%);
+}
+
+/* big emoji */
+.alert-icon {
+  font-size: 3.4rem;
+  flex-shrink: 0;
+  animation: iconBounce 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.25s both;
+  filter: drop-shadow(0 0 14px rgba(155,89,255,0.7));
+}
+@keyframes iconBounce {
+  from { transform: scale(0) rotate(-30deg); }
+  to   { transform: scale(1) rotate(0deg); }
+}
+
+.alert-text { flex: 1; min-width: 0; }
+
+.alert-event {
+  font-size: 0.6rem;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--purple);
+  font-family: 'Courier Prime', monospace;
+  margin-bottom: 4px;
+  animation: fadeUp 0.4s 0.4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.alert-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: fadeUp 0.4s 0.5s ease both;
+  text-shadow: 0 0 20px rgba(155,89,255,0.4);
+}
+
+.alert-desc {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 5px;
+  animation: fadeUp 0.4s 0.6s ease both;
+}
+.alert-desc strong { color: var(--magenta); }
+
+/* amount badge */
+.alert-amount {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  animation: fadeUp 0.4s 0.55s ease both;
+}
+.amount-val {
+  font-family: 'Courier Prime', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--magenta);
+  line-height: 1;
+  text-shadow: 0 0 24px rgba(224,64,251,0.6);
+}
+.amount-label {
+  font-size: 0.58rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* message strip */
+.alert-msg {
+  padding: 10px 24px 16px;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.82rem;
+  color: var(--muted);
+  border-top: 1px solid rgba(155,89,255,0.12);
+  background: rgba(155,89,255,0.04);
+  display: none;
+  animation: fadeUp 0.4s 0.65s ease both;
+}
+.alert-msg::before { content: '💬 '; }
+
+/* timer bar — Lila */
+.alert-timer {
+  height: 3px;
+  background: rgba(155,89,255,0.1);
+}
+.alert-timer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple2), var(--magenta));
+  width: 100%;
+  transform-origin: left;
+  box-shadow: 0 0 8px rgba(155,89,255,0.6);
+}
+
+/* ── FLOATING BOTTLES ── */
+.floater {
+  position: fixed;
+  font-size: 2.2rem;
+  pointer-events: none;
+  animation: floatUp 1.6s ease forwards;
+  filter: drop-shadow(0 0 10px rgba(155,89,255,0.6));
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(-280px) rotate(540deg) scale(0.1); opacity: 0; }
+}
+
+/* ── SOUND WAVE ── */
+.soundwave {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+}
+.soundwave.active { animation: wavePop 0.9s ease forwards; }
+@keyframes wavePop {
+  0%   { opacity: 0.5; transform: translate(-50%,-50%) scale(0); }
+  100% { opacity: 0;   transform: translate(-50%,-50%) scale(5); }
+}
+.soundwave svg circle {
+  fill: none;
+  stroke: rgba(155,89,255,0.35);
+  stroke-width: 2;
+}
+</style>
+</head>
+<body>
+
+<!-- ALERT -->
+<div class="alert-wrap">
+  <div class="alert-card" id="alertCard">
+    <div class="alert-accent"></div>
+    <div class="alert-inner">
+      <div class="alert-icon" id="alertIcon">🍾</div>
+      <div class="alert-text">
+        <div class="alert-event">Pfand eingeworfen!</div>
+        <div class="alert-name" id="alertName">Username</div>
+        <div class="alert-desc" id="alertDesc">wirft <strong>1×</strong> Flasche ein</div>
+      </div>
+      <div class="alert-amount">
+        <div class="amount-val" id="alertAmt">0,25 €</div>
+        <div class="amount-label">Pfand</div>
+      </div>
+    </div>
+    <div class="alert-msg" id="alertMsg"></div>
+    <div class="alert-timer">
+      <div class="alert-timer-fill" id="timerFill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SOUNDWAVE -->
+<div class="soundwave" id="soundwave">
+  <svg width="200" height="200" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="40"/>
+    <circle cx="100" cy="100" r="60"/>
+    <circle cx="100" cy="100" r="80"/>
+  </svg>
+</div>
+
+<script>
+const ALERT_DURATION = 5000; // ms — aus Config lesbar
+let alertQueue = [];
+let isShowing  = false;
+
+const card      = document.getElementById('alertCard');
+const iconEl    = document.getElementById('alertIcon');
+const nameEl    = document.getElementById('alertName');
+const descEl    = document.getElementById('alertDesc');
+const amtEl     = document.getElementById('alertAmt');
+const msgEl     = document.getElementById('alertMsg');
+const timerFill = document.getElementById('timerFill');
+
+function showNext() {
+  if (isShowing || !alertQueue.length) return;
+  isShowing = true;
+  const d = alertQueue.shift();
+
+  // fill content
+  iconEl.textContent = d.type.emoji;
+  nameEl.textContent = d.name;
+  descEl.innerHTML   = `wirft <strong>${d.qty}×</strong> ${d.type.name} ein`;
+  amtEl.textContent  = d.total.toFixed(2).replace('.',',') + ' €';
+
+  if (d.msg) {
+    msgEl.textContent = d.msg;
+    msgEl.style.display = 'block';
+  } else {
+    msgEl.style.display = 'none';
+  }
+
+  // enter
+  card.classList.remove('leaving');
+  void card.offsetWidth;
+  card.classList.add('entering');
+
+  // timer bar
+  timerFill.style.transition = 'none';
+  timerFill.style.transform  = 'scaleX(1)';
+  void timerFill.offsetWidth;
+  timerFill.style.transition = `transform ${ALERT_DURATION}ms linear`;
+  timerFill.style.transform  = 'scaleX(0)';
+
+  // soundwave
+  const sw = document.getElementById('soundwave');
+  sw.classList.remove('active');
+  void sw.offsetWidth;
+  sw.classList.add('active');
+
+  // floaters
+  const count = Math.min(d.qty, 10);
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => spawnFloater(d.type.emoji), 300 + i * 100);
+  }
+
+  // leave
+  setTimeout(() => {
+    card.classList.remove('entering');
+    card.classList.add('leaving');
+    setTimeout(() => {
+      isShowing = false;
+      showNext();
+    }, 450);
+  }, ALERT_DURATION);
+}
+
+function spawnFloater(emoji) {
+  const el = document.createElement('div');
+  el.className = 'floater';
+  el.textContent = emoji;
+  el.style.left   = (5 + Math.random() * 90) + 'vw';
+  el.style.bottom = (5 + Math.random() * 30) + 'vh';
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+// ── SUPABASE REALTIME ──
+const SUPABASE_URL = 'https://oqbvqcruqwmxlboyyvzw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xYnZxY3J1cXdteGxib3l5dnp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NjU5MjksImV4cCI6MjA5NDU0MTkyOX0.gtfZ9eS5f2KLDKo_7cu5aXzSBixNtF-AJ9QAzniq4dc';
+
+let lastId = 0;
+
+async function pollSupabase() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/donations?order=id.desc&limit=1`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const data = await res.json();
+    if (data && data.length && data[0].id > lastId) {
+      lastId = data[0].id;
+      const d = data[0];
+      alertQueue.push({
+        name: d.name,
+        qty: d.qty,
+        type: { emoji: d.emoji, name: d.type_name },
+        total: d.total,
+        ts: Date.now()
+      });
+      showNext();
+    }
+  } catch(e) {}
+}
+
+// Beim Start letzten Eintrag holen damit alte Alerts nicht nochmal kommen
+fetch(`${SUPABASE_URL}/rest/v1/donations?order=id.desc&limit=1`,
+  { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } })
+  .then(r => r.json())
+  .then(d => { if (d && d.length) lastId = d[0].id; })
+  .catch(() => {});
+
+setInterval(pollSupabase, 2000);
+
+// Kein Demo-Alert — wartet auf echte Spenden
+</script>
+</body>
+</html>
