@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍾 Pfand Spenden</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --bg: #0f0f0f;
+  --card: #1a1a1a;
+  --border: #2a2a2a;
+  --green: #00ff88;
+  --green2: #00cc6a;
+  --amber: #ffb700;
+  --text: #f0f0f0;
+  --muted: #666;
+  --red: #ff4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 60px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* animated BG grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; width: 100%; max-width: 520px; }
+
+/* ── HEADER ── */
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+  animation: fadeUp 0.6s ease both;
+}
+.streamer-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), var(--amber));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 16px;
+  box-shadow: 0 0 30px rgba(0,255,136,0.3);
+}
+.streamer-name {
+  font-size: 1.1rem;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+h1 {
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--green), var(--amber));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sub {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-family: 'Courier Prime', monospace;
+}
+
+/* ── LIVE TICKER ── */
+.ticker {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.live-dot {
+  width: 8px; height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+.ticker-text {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.ticker-text strong { color: var(--green); }
+#tickerTotal { color: var(--amber); font-weight: 700; }
+
+/* ── BOTTLE PICKER ── */
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  animation: fadeUp 0.6s 0.15s ease both;
+}
+
+.bottles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.bottle-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.bottle-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(0,255,136,0.08), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.bottle-card:hover { border-color: rgba(0,255,136,0.4); transform: translateY(-2px); }
+.bottle-card:hover::before { opacity: 1; }
+.bottle-card.selected {
+  border-color: var(--green);
+  background: rgba(0,255,136,0.06);
+  box-shadow: 0 0 20px rgba(0,255,136,0.15);
+}
+.bottle-card.selected::before { opacity: 1; }
+
+.bc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.bc-emoji { font-size: 1.8rem; }
+.bc-pfand {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+  background: rgba(0,255,136,0.12);
+  color: var(--green);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,255,136,0.2);
+}
+.bc-name { font-size: 0.85rem; font-weight: 700; margin-bottom: 2px; }
+.bc-desc { font-size: 0.7rem; color: var(--muted); font-family: 'Courier Prime', monospace; }
+
+/* check */
+.bc-check {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 18px; height: 18px;
+  background: var(--green);
+  border-radius: 50%;
+  display: none;
+  align-items: center; justify-content: center;
+  font-size: 0.6rem;
+  color: #000;
+  font-weight: 700;
+}
+.bottle-card.selected .bc-check { display: flex; }
+
+/* ── QUANTITY ── */
+.qty-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  animation: fadeUp 0.6s 0.25s ease both;
+}
+.qty-label { flex: 1; }
+.qty-label div:first-child { font-weight: 700; font-size: 0.9rem; }
+.qty-label div:last-child { font-size: 0.75rem; color: var(--muted); font-family: 'Courier Prime', monospace; margin-top: 2px; }
+.qty-controls { display: flex; align-items: center; gap: 12px; }
+.qty-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.qty-btn:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.06); }
+.qty-num {
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: center;
+  color: var(--green);
+}
+
+/* ── NAME INPUT ── */
+.name-row {
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+.name-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.name-input::placeholder { color: var(--muted); }
+.name-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(0,255,136,0.08); }
+
+/* ── MESSAGE ── */
+.msg-row {
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s 0.32s ease both;
+}
+.msg-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  color: var(--text);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.88rem;
+  outline: none;
+  resize: none;
+  height: 90px;
+  transition: border-color 0.2s;
+}
+.msg-input::placeholder { color: var(--muted); }
+.msg-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(0,255,136,0.08); }
+
+/* ── SUMMARY ── */
+.summary {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.6s 0.35s ease both;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.summary-row:last-child {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0;
+}
+.summary-row span:last-child { color: var(--amber); }
+.summary-row:last-child span:last-child { color: var(--green); font-size: 1.2rem; }
+
+/* ── PAYMENT BUTTONS ── */
+.payment-section { animation: fadeUp 0.6s 0.4s ease both; }
+.pay-label {
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.pay-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+.pay-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: none;
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.18s;
+  letter-spacing: 0.5px;
+}
+.pay-btn:hover { transform: translateY(-2px); }
+.pay-btn:active { transform: scale(0.98); }
+
+.pay-paypal {
+  background: #0070BA;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0,112,186,0.3);
+}
+.pay-paypal:hover { background: #005ea6; box-shadow: 0 6px 28px rgba(0,112,186,0.4); }
+
+.pay-stripe {
+  background: #635BFF;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(99,91,255,0.3);
+}
+.pay-stripe:hover { background: #5248e0; box-shadow: 0 6px 28px rgba(99,91,255,0.4); }
+
+.pay-sim {
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px dashed var(--border);
+  font-size: 0.85rem;
+}
+.pay-sim:hover { border-color: var(--green); color: var(--green); transform: none; }
+
+/* ── SUCCESS STATE ── */
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+  animation: fadeUp 0.5s ease both;
+}
+.success-screen.show { display: block; }
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: bounce 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes bounce {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.success-screen h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--green), var(--amber));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+.success-screen p { color: var(--muted); font-family: 'Courier Prime', monospace; line-height: 1.6; }
+.success-screen .back-btn {
+  margin-top: 28px;
+  padding: 12px 32px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.success-screen .back-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* ── FLOATING BOTTLES ── */
+.float-bottle {
+  position: fixed;
+  font-size: 1.5rem;
+  pointer-events: none;
+  z-index: 200;
+  animation: floatUp 1.2s ease forwards;
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-200px) scale(0.3) rotate(360deg); opacity: 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── FOOTER ── */
+footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-family: 'Courier Prime', monospace;
+  line-height: 1.8;
+}
+footer a { color: var(--muted); text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="streamer-avatar">🎮</div>
+    <div class="streamer-name">StreamerName</div>
+    <h1>Flaschen<br>einwerfen</h1>
+    <div class="sub">// Spende als Pfandflaschen — weil's cooler ist als einfach €</div>
+  </div>
+
+  <!-- LIVE TICKER -->
+  <div class="ticker">
+    <div class="live-dot"></div>
+    <div class="ticker-text">
+      Heute eingeworfen: <strong id="tickerCount">0 Flaschen</strong> → <span id="tickerTotal">0,00 €</span> gespendet
+    </div>
+  </div>
+
+  <!-- MAIN FORM -->
+  <div id="mainForm">
+
+    <!-- BOTTLE TYPE -->
+    <div class="section-label">1 / Flaschentyp wählen</div>
+    <div class="bottles-grid" id="bottleGrid"></div>
+
+    <!-- QUANTITY -->
+    <div class="qty-row">
+      <div class="qty-label">
+        <div>Anzahl Flaschen</div>
+        <div id="qtyHint">= 0,00 €</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <div class="qty-num" id="qtyNum">1</div>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+
+    <!-- NAME -->
+    <div class="section-label">2 / Dein Name im Chat</div>
+    <div class="name-row">
+      <input class="name-input" id="nameInput" type="text" placeholder="TwitchUsername oder Anonym" maxlength="40">
+    </div>
+
+    <!-- MESSAGE -->
+    <div class="section-label">3 / Nachricht (optional)</div>
+    <div class="msg-row">
+      <textarea class="msg-input" id="msgInput" placeholder="Schreib dem Streamer was..."></textarea>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="summary" id="summary">
+      <div class="summary-row"><span>Flaschentyp</span><span id="sumType">–</span></div>
+      <div class="summary-row"><span>Anzahl</span><span id="sumQty">–</span></div>
+      <div class="summary-row"><span>Pfand / Flasche</span><span id="sumPfand">–</span></div>
+      <div class="summary-row"><span>Gesamt</span><span id="sumTotal">0,00 €</span></div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="payment-section">
+      <div class="pay-label">4 / Bezahlen</div>
+      <div class="pay-buttons">
+        <button class="pay-btn pay-paypal" onclick="pay('paypal')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.217a.641.641 0 0 1 .632-.546h7.568c2.525 0 4.371.596 5.484 1.773.508.543.836 1.117 1.001 1.741.172.661.17 1.408-.005 2.284l-.006.039v.543l.399.225c.328.185.621.422.871.704.41.464.673 1.053.781 1.748.117.743.075 1.633-.123 2.647-.228 1.164-.609 2.178-1.132 3.011-.479.774-1.089 1.406-1.814 1.878-.694.457-1.518.792-2.451.996-.904.198-1.934.299-3.063.299H12.09l-.506 3.254a.641.641 0 0 1-.632.545H7.076z"/></svg>
+          Mit PayPal spenden
+        </button>
+        <button class="pay-btn pay-stripe" onclick="pay('stripe')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.91 5.555C5.22 23.102 8.146 24 11.55 24c2.6 0 4.73-.637 6.213-1.86 1.55-1.287 2.326-3.135 2.326-5.47 0-4.11-2.535-5.844-6.113-7.32z"/></svg>
+          Mit Karte bezahlen (Stripe)
+        </button>
+        <button class="pay-btn pay-sim" onclick="simulate()">
+          🧪 Demo: Ohne Zahlung simulieren
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /mainForm -->
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">🍾</div>
+    <h2>Danke!</h2>
+    <p id="successMsg">Deine Flaschen wurden eingeworfen.<br>Der Streamer sieht sie gleich im Overlay!</p>
+    <button class="back-btn" onclick="reset()">← Weitere einwerfen</button>
+  </div>
+
+  <footer>
+    PfandMat Donations · kein echtes Pfand 🙂<br>
+    <a href="pfand-overlay.html" target="_blank">OBS Overlay öffnen →</a>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+// ═══════════════════════════════════════════════
+//  ✏️  NUR HIER ANPASSEN — dann fertig!
+// ═══════════════════════════════════════════════
+const PAYPAL_ME    = 'DeinName';          // ← paypal.me/DeinName  (nur den Namen)
+const STRIPE_LINK  = '';                  // ← z.B. 'https://buy.stripe.com/xxxxx' (leer lassen wenn nicht genutzt)
+const STREAMER     = 'StreamerName';      // ← Dein Anzeigename oben auf der Seite
+// ═══════════════════════════════════════════════
+
+const TYPES = [
+  { id:'pet',    emoji:'🧴', name:'PET Flasche',  desc:'0,25 € Einweg',   pfand:0.25 },
+  { id:'glas',   emoji:'🍺', name:'Glasflasche',  desc:'0,15 € Mehrweg',  pfand:0.15 },
+  { id:'dose',   emoji:'🥫', name:'Dose',         desc:'0,25 € Einweg',   pfand:0.25 },
+  { id:'cola',   emoji:'🥤', name:'Cola Flasche',  desc:'0,25 € PET',      pfand:0.25 },
+  { id:'saft',   emoji:'🍹', name:'Saftflasche',  desc:'0,15 € Glas',     pfand:0.15 },
+  { id:'wasser', emoji:'💧', name:'Wasserflasche',desc:'0,25 € PET',       pfand:0.25 },
+];
+
+// Streamer-Name dynamisch einsetzen
+document.querySelector('.streamer-name').textContent = STREAMER;
+
+let selectedType = TYPES[0];
+let qty = 1;
+let sessionCount = 0;
+let sessionCents = 0;
+
+// build grid
+function buildGrid() {
+  const grid = document.getElementById('bottleGrid');
+  TYPES.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'bottle-card' + (i === 0 ? ' selected' : '');
+    card.id = `bc-${t.id}`;
+    card.onclick = () => selectType(t);
+    card.innerHTML = `
+      <div class="bc-check">✓</div>
+      <div class="bc-top">
+        <span class="bc-emoji">${t.emoji}</span>
+        <span class="bc-pfand">${t.pfand.toFixed(2).replace('.',',')} €</span>
+      </div>
+      <div class="bc-name">${t.name}</div>
+      <div class="bc-desc">${t.desc}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function selectType(t) {
+  selectedType = t;
+  document.querySelectorAll('.bottle-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`bc-${t.id}`).classList.add('selected');
+  updateSummary();
+}
+
+function changeQty(d) {
+  qty = Math.max(1, Math.min(100, qty + d));
+  document.getElementById('qtyNum').textContent = qty;
+  updateSummary();
+}
+
+function updateSummary() {
+  const total = selectedType.pfand * qty;
+  document.getElementById('qtyHint').textContent = `= ${total.toFixed(2).replace('.',',')} €`;
+  document.getElementById('sumType').textContent = selectedType.emoji + ' ' + selectedType.name;
+  document.getElementById('sumQty').textContent = qty + ' Stück';
+  document.getElementById('sumPfand').textContent = selectedType.pfand.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('sumTotal').textContent = total.toFixed(2).replace('.',',') + ' €';
+}
+
+function pay(method) {
+  const name  = document.getElementById('nameInput').value.trim() || 'Anonym';
+  const total = selectedType.pfand * qty;
+  const amount = total.toFixed(2);
+
+  if (method === 'paypal') {
+    // Öffnet paypal.me/DeinName/2.50 — Betrag ist vorausgefüllt
+    const url = `https://www.paypal.com/paypalme/${PAYPAL_ME}/${amount}`;
+    window.open(url, '_blank');
+  } else if (method === 'stripe') {
+    if (STRIPE_LINK) {
+      window.open(STRIPE_LINK, '_blank');
+    } else {
+      alert('Stripe Link noch nicht eingetragen.\nIn der Datei STRIPE_LINK ausfüllen.');
+      return;
+    }
+  }
+  showSuccess(name, total);
+}
+
+function simulate() {
+  const name = document.getElementById('nameInput').value.trim() || 'Anonym';
+  const total = selectedType.pfand * qty;
+  showSuccess(name, total);
+}
+
+function showSuccess(name, total) {
+  sessionCount += qty;
+  sessionCents += Math.round(total * 100);
+
+  document.getElementById('tickerCount').textContent = sessionCount + ' Flaschen';
+  document.getElementById('tickerTotal').textContent = (sessionCents/100).toFixed(2).replace('.',',') + ' €';
+
+  document.getElementById('successMsg').innerHTML =
+    `<strong style="color:var(--green)">${name}</strong> hat ${qty}× ${selectedType.emoji} ${selectedType.name} eingeworfen!<br>
+     Das sind <strong style="color:var(--amber)">${total.toFixed(2).replace('.',',')} €</strong> Pfand.<br><br>
+     Der Streamer sieht das gleich im OBS Overlay!`;
+
+  document.getElementById('mainForm').style.display = 'none';
+  document.getElementById('successScreen').classList.add('show');
+
+  // floating bottles
+  for (let i = 0; i < Math.min(qty, 12); i++) {
+    setTimeout(() => spawnFloater(selectedType.emoji), i * 80);
+  }
+
+  // broadcast to overlay via localStorage (same-origin only — replace with WebSocket in prod)
+  const donation = { name, qty, type: selectedType, total, ts: Date.now() };
+  try {
+    const list = JSON.parse(localStorage.getItem('pfand_donations') || '[]');
+    list.push(donation);
+    localStorage.setItem('pfand_donations', JSON.stringify(list));
+    localStorage.setItem('pfand_latest', JSON.stringify(donation));
+  } catch(e) {}
+}
+
+function spawnFloater(emoji) {
+  const el = document.createElement('div');
+  el.className = 'float-bottle';
+  el.textContent = emoji;
+  el.style.left = (20 + Math.random() * 60) + 'vw';
+  el.style.bottom = '10vh';
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+function reset() {
+  qty = 1;
+  selectedType = TYPES[0];
+  document.getElementById('qtyNum').textContent = '1';
+  document.getElementById('nameInput').value = '';
+  document.getElementById('msgInput').value = '';
+  document.querySelectorAll('.bottle-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`bc-${TYPES[0].id}`).classList.add('selected');
+  document.getElementById('mainForm').style.display = '';
+  document.getElementById('successScreen').classList.remove('show');
+  updateSummary();
+}
+
+buildGrid();
+updateSummary();
+</script>
+</body>
+</html>

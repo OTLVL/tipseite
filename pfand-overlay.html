@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>PfandMat OBS Overlay</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Courier+Prime:wght@700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: transparent;
+  overflow: hidden;
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  font-family: 'Syne', sans-serif;
+}
+
+/* ── ALERT BOX (bottom left) ── */
+.alert-container {
+  position: fixed;
+  bottom: 40px;
+  left: 40px;
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.alert {
+  background: rgba(10, 10, 10, 0.92);
+  border: 2px solid #00ff88;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 0 40px rgba(0,255,136,0.25), 0 8px 32px rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+  transform: translateX(-120%);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+}
+.alert.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+.alert.hide {
+  transform: translateX(-120%);
+  opacity: 0;
+  transition: transform 0.4s ease-in, opacity 0.4s;
+}
+
+.alert-emoji {
+  font-size: 2.4rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(0,255,136,0.5));
+  animation: wiggle 0.5s ease both;
+}
+@keyframes wiggle {
+  0%,100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-15deg) scale(1.2); }
+  75%      { transform: rotate(15deg) scale(1.2); }
+}
+
+.alert-body { flex: 1; min-width: 0; }
+.alert-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #00ff88;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
+}
+.alert-action {
+  font-size: 0.78rem;
+  color: #aaa;
+  font-family: 'Courier Prime', monospace;
+  margin-top: 2px;
+}
+.alert-amount {
+  font-family: 'Courier Prime', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffb700;
+  flex-shrink: 0;
+  text-shadow: 0 0 12px rgba(255,183,0,0.5);
+}
+
+/* ── TOTAL COUNTER (top right) ── */
+.counter {
+  position: fixed;
+  top: 32px;
+  right: 40px;
+  background: rgba(10,10,10,0.88);
+  border: 1.5px solid rgba(0,255,136,0.3);
+  border-radius: 14px;
+  padding: 14px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.counter-label {
+  font-size: 0.55rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #555;
+  font-family: 'Courier Prime', monospace;
+}
+.counter-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #00ff88;
+  text-shadow: 0 0 16px rgba(0,255,136,0.4);
+  line-height: 1;
+}
+.counter-val.bump {
+  animation: counterBump 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes counterBump {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.25); color: #fff; }
+  100% { transform: scale(1); }
+}
+
+.counter-sub {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+  color: #ffb700;
+}
+
+/* ── FLOATING BOTTLES ── */
+.floater {
+  position: fixed;
+  font-size: 2rem;
+  pointer-events: none;
+  animation: floatUp 1.8s ease forwards;
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  80%  { opacity: 0.6; }
+  100% { transform: translateY(-300px) rotate(720deg) scale(0.2); opacity: 0; }
+}
+
+/* ── PROGRESS BAR ── */
+.goalbar {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+}
+.goalbar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #ffb700);
+  transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 12px rgba(0,255,136,0.5);
+}
+</style>
+</head>
+<body>
+
+<!-- ALERT STACK -->
+<div class="alert-container" id="alertContainer"></div>
+
+<!-- TOTAL COUNTER -->
+<div class="counter">
+  <div class="counter-label">Pfand heute</div>
+  <div class="counter-val" id="counterVal">0,00 €</div>
+  <div class="counter-sub" id="counterSub">0 Flaschen</div>
+</div>
+
+<!-- GOAL PROGRESS BAR -->
+<div class="goalbar">
+  <div class="goalbar-fill" id="goalFill" style="width:0%"></div>
+</div>
+
+<script>
+const GOAL_CENTS = 2000; // 20,00 € Tagesziel — anpassbar
+let totalCents = 0;
+let totalBottles = 0;
+
+// ── DEMO QUEUE (simuliert Spenden für Preview) ──
+const demoQueue = [
+  { name: 'xXDragonSlayerXx', qty: 5,  emoji: '🧴', typeName: 'PET Flaschen',  pfand: 0.25 },
+  { name: 'lena_live',        qty: 1,  emoji: '📦', typeName: 'Bierkasten',     pfand: 1.50 },
+  { name: 'Anonym',           qty: 10, emoji: '🥫', typeName: 'Dosen',          pfand: 0.25 },
+  { name: 'StreamFan2024',    qty: 3,  emoji: '🍾', typeName: 'Sektflaschen',   pfand: 0.15 },
+  { name: 'kacperpl',         qty: 2,  emoji: '🍺', typeName: 'Glasflaschen',   pfand: 0.15 },
+];
+let demoIdx = 0;
+
+function showAlert(donation) {
+  const { name, qty, emoji, typeName, pfand } = donation;
+  const total = pfand * qty;
+
+  // update totals
+  totalCents += Math.round(total * 100);
+  totalBottles += qty;
+
+  const valEl = document.getElementById('counterVal');
+  const subEl = document.getElementById('counterSub');
+  valEl.textContent = (totalCents/100).toFixed(2).replace('.',',') + ' €';
+  subEl.textContent = totalBottles + ' Flaschen';
+  valEl.classList.remove('bump');
+  void valEl.offsetWidth;
+  valEl.classList.add('bump');
+
+  // goal bar
+  const pct = Math.min((totalCents / GOAL_CENTS) * 100, 100);
+  document.getElementById('goalFill').style.width = pct + '%';
+
+  // alert box
+  const alert = document.createElement('div');
+  alert.className = 'alert';
+  alert.innerHTML = `
+    <div class="alert-emoji">${emoji}</div>
+    <div class="alert-body">
+      <div class="alert-name">${name}</div>
+      <div class="alert-action">wirft ${qty}× ${typeName} ein</div>
+    </div>
+    <div class="alert-amount">${total.toFixed(2).replace('.',',')} €</div>
+  `;
+
+  const container = document.getElementById('alertContainer');
+  container.appendChild(alert);
+  void alert.offsetWidth;
+  alert.classList.add('show');
+
+  // floating bottles
+  for (let i = 0; i < Math.min(qty, 8); i++) {
+    setTimeout(() => spawnFloater(emoji), i * 120);
+  }
+
+  // remove after 5s
+  setTimeout(() => {
+    alert.classList.add('hide');
+    setTimeout(() => alert.remove(), 500);
+  }, 5000);
+}
+
+function spawnFloater(emoji) {
+  const el = document.createElement('div');
+  el.className = 'floater';
+  el.textContent = emoji;
+  el.style.left = (10 + Math.random() * 80) + 'vw';
+  el.style.bottom = (5 + Math.random() * 20) + 'vh';
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+// ── POLL localStorage for real donations (same-origin) ──
+let lastTs = 0;
+function pollDonations() {
+  try {
+    const raw = localStorage.getItem('pfand_latest');
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d.ts && d.ts > lastTs) {
+        lastTs = d.ts;
+        showAlert({
+          name: d.name,
+          qty: d.qty,
+          emoji: d.type.emoji,
+          typeName: d.type.name,
+          pfand: d.type.pfand,
+        });
+      }
+    }
+  } catch(e) {}
+}
+setInterval(pollDonations, 1000);
+
+// ── DEMO: trigger every 6s for preview ──
+function nextDemo() {
+  showAlert(demoQueue[demoIdx % demoQueue.length]);
+  demoIdx++;
+  setTimeout(nextDemo, 5000 + Math.random() * 4000);
+}
+setTimeout(nextDemo, 2000); // first one after 2s
+</script>
+</body>
+</html>
