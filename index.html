@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTLVL · Pfand Spenden</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;500;700&display=swap');
+
+:root {
+  --bg:      #12101a;
+  --card:    #1e1b2e;
+  --border:  #2e2850;
+  --purple:  #7c3aed;
+  --purple2: #9b59ff;
+  --light:   #a78bfa;
+  --text:    #ffffff;
+  --muted:   #7c6fa0;
+  --red:     #ff4455;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Raster wie im Banner */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(124,58,237,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(12,10,20,0.75) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; width: 100%; max-width: 540px; }
+
+/* ── HEADER ── */
+.header { text-align: center; margin-bottom: 36px; animation: fadeUp 0.5s ease both; }
+
+.header-icon {
+  width: 64px; height: 64px;
+  margin: 0 auto 18px;
+  background: rgba(124,58,237,0.12);
+  border: 2px solid var(--purple);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 0 28px rgba(124,58,237,0.3);
+}
+
+.support-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.header-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(3.5rem, 14vw, 5.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+}
+.header-title .ot  { color: #fff; }
+.header-title .lvl { color: var(--purple2); }
+
+.header-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.header-sub span { color: var(--light); }
+
+/* ── TICKER ── */
+.ticker {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--purple2);
+  border-radius: 10px;
+  padding: 11px 16px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: blink 1.2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.ticker-text { font-size: 0.8rem; color: var(--muted); }
+.ticker-text strong { color: var(--light); }
+#tickerTotal { color: var(--purple2); font-weight: 700; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── BOTTLES ── */
+.bottles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.5s 0.15s ease both;
+}
+.bottle-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.bottle-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(124,58,237,0.12), transparent 70%);
+  opacity: 0; transition: opacity 0.2s;
+}
+.bottle-card:hover { border-color: rgba(155,89,255,0.5); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,0.15); }
+.bottle-card:hover::before { opacity: 1; }
+.bottle-card.selected { border-color: var(--purple2); background: rgba(124,58,237,0.1); box-shadow: 0 0 24px rgba(124,58,237,0.2); }
+.bottle-card.selected::before { opacity: 1; }
+
+.bc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.bc-emoji { font-size: 1.7rem; }
+.bc-pfand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem; letter-spacing: 1px;
+  background: rgba(124,58,237,0.15);
+  color: var(--light);
+  padding: 2px 8px; border-radius: 20px;
+  border: 1px solid rgba(124,58,237,0.3);
+}
+.bc-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.bc-desc { font-size: 0.7rem; color: var(--muted); }
+.bc-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 18px; height: 18px;
+  background: var(--purple2); border-radius: 50%;
+  display: none; align-items: center; justify-content: center;
+  font-size: 0.6rem; color: #fff; font-weight: 700;
+}
+.bottle-card.selected .bc-check { display: flex; }
+
+/* ── QUANTITY ── */
+.qty-row {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 20px;
+  background: var(--card);
+  border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 14px 18px;
+  animation: fadeUp 0.5s 0.2s ease both;
+}
+.qty-label { flex: 1; }
+.qty-label div:first-child {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 1rem;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.qty-label div:last-child { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.qty-controls { display: flex; align-items: center; gap: 12px; }
+.qty-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-size: 1.2rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.qty-btn:hover { border-color: var(--purple2); color: var(--purple2); background: rgba(124,58,237,0.08); }
+.qty-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem; font-weight: 700;
+  min-width: 36px; text-align: center;
+  color: var(--purple2);
+}
+
+/* ── INPUTS ── */
+.input-row { margin-bottom: 20px; animation: fadeUp 0.5s 0.25s ease both; }
+.field-input, .field-textarea {
+  width: 100%; padding: 13px 16px;
+  background: var(--card);
+  border: 1.5px solid var(--border); border-radius: 12px;
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 0.95rem;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field-input::placeholder, .field-textarea::placeholder { color: var(--muted); }
+.field-input:focus, .field-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+.field-textarea { resize: none; height: 80px; }
+
+/* ── SUMMARY ── */
+.summary {
+  background: var(--card);
+  border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 20px;
+  animation: fadeUp 0.5s 0.3s ease both;
+}
+.summary-row {
+  display: flex; justify-content: space-between;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.82rem; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+.summary-row:last-child {
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 1rem; font-weight: 700;
+  color: var(--text); margin-bottom: 0;
+}
+.summary-row span:last-child { color: var(--light); }
+.summary-row:last-child span:last-child { color: var(--purple2); font-size: 1.3rem; }
+
+/* ── MAIN BUTTON (wie Banner) ── */
+.payment-section { animation: fadeUp 0.5s 0.35s ease both; }
+
+.pay-btn-main {
+  width: 100%; padding: 18px;
+  background: var(--purple); color: #fff;
+  border: none; border-radius: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem; font-weight: 900;
+  letter-spacing: 4px; text-transform: uppercase;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  transition: all 0.18s;
+  box-shadow: 0 4px 24px rgba(124,58,237,0.4);
+  margin-bottom: 10px;
+  position: relative; overflow: hidden;
+}
+.pay-btn-main::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
+}
+.pay-btn-main:hover { background: var(--purple2); box-shadow: 0 6px 32px rgba(124,58,237,0.6); transform: translateY(-2px); }
+.pay-btn-main:active { transform: scale(0.98); }
+
+.pay-btn-demo {
+  width: 100%; padding: 11px;
+  background: transparent; color: var(--muted);
+  border: 1.5px dashed var(--border); border-radius: 10px;
+  font-family: 'Barlow', sans-serif; font-size: 0.82rem;
+  cursor: pointer; transition: all 0.15s;
+}
+.pay-btn-demo:hover { border-color: var(--purple); color: var(--light); }
+
+/* ── SUCCESS ── */
+.success-screen { display: none; text-align: center; padding: 60px 20px; animation: fadeUp 0.5s ease both; }
+.success-screen.show { display: block; }
+.success-icon { font-size: 4rem; margin-bottom: 20px; animation: bounce 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes bounce { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.success-screen h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 3rem; font-weight: 900;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--purple2); margin-bottom: 12px;
+  text-shadow: 0 0 30px rgba(124,58,237,0.5);
+}
+.success-screen p { color: var(--muted); line-height: 1.7; font-size: 0.9rem; }
+.back-btn {
+  margin-top: 28px; padding: 12px 32px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 10px;
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 1rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.18s;
+}
+.back-btn:hover { border-color: var(--purple2); color: var(--purple2); }
+
+/* ── FLOATERS ── */
+.float-bottle {
+  position: fixed; font-size: 1.6rem; pointer-events: none; z-index: 200;
+  animation: floatUp 1.2s ease forwards;
+  filter: drop-shadow(0 0 8px rgba(124,58,237,0.6));
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(-220px) rotate(360deg) scale(0.2); opacity: 0; }
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+footer {
+  margin-top: 40px; text-align: center;
+  font-size: 0.68rem; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-icon">♥</div>
+    <div class="support-label">Support · Donation</div>
+    <div class="header-title"><span class="ot">OT</span><span class="lvl">LVL</span></div>
+    <div class="header-sub">Freiwillig · <span>Danke!</span> ♥</div>
+  </div>
+
+  <div class="ticker">
+    <div class="live-dot"></div>
+    <div class="ticker-text">
+      Heute: <strong id="tickerCount">0 Flaschen</strong> eingeworfen → <span id="tickerTotal">0,00 €</span>
+    </div>
+  </div>
+
+  <div id="mainForm">
+
+    <div class="section-label">Flaschentyp wählen</div>
+    <div class="bottles-grid" id="bottleGrid"></div>
+
+    <div class="section-label">Anzahl</div>
+    <div class="qty-row">
+      <div class="qty-label">
+        <div>Flaschen</div>
+        <div id="qtyHint">= 0,00 €</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <div class="qty-num" id="qtyNum">1</div>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+
+    <div class="section-label">Dein Name</div>
+    <div class="input-row">
+      <input class="field-input" id="nameInput" type="text" placeholder="TwitchUsername oder Anonym" maxlength="40">
+    </div>
+
+    <div class="section-label">Nachricht (optional)</div>
+    <div class="input-row">
+      <textarea class="field-textarea" id="msgInput" placeholder="Schreib dem Streamer was..."></textarea>
+    </div>
+
+    <div class="summary">
+      <div class="summary-row"><span>Typ</span><span id="sumType">–</span></div>
+      <div class="summary-row"><span>Anzahl</span><span id="sumQty">–</span></div>
+      <div class="summary-row"><span>Pfand / Stück</span><span id="sumPfand">–</span></div>
+      <div class="summary-row"><span>Gesamt</span><span id="sumTotal">0,00 €</span></div>
+    </div>
+
+    <div class="payment-section">
+      <button class="pay-btn-main" onclick="pay()">Jetzt Donaten ▶</button>
+      <button class="pay-btn-demo" onclick="simulate()">🧪 Demo ohne Zahlung</button>
+    </div>
+
+  </div>
+
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">🍾</div>
+    <h2>Danke!</h2>
+    <p id="successMsg"></p>
+    <button class="back-btn" onclick="reset()">← Weitere einwerfen</button>
+  </div>
+
+  <footer>PfandMat · OTLVL · kein echtes Pfand 🙂</footer>
+</div>
+
+<script>
+// ═══════════════════════════════════
+//  ✏️  NUR HIER ANPASSEN
+// ═══════════════════════════════════
+const PAYPAL_ME = 'OTLVL';  // ← dein paypal.me Name
+// ═══════════════════════════════════
+
+const TYPES = [
+  { id:'pet',  emoji:'🧴', name:'PET Flasche', desc:'Einweg',  pfand:0.25 },
+  { id:'glas', emoji:'🍶', name:'Glasflasche', desc:'Mehrweg', pfand:0.15 },
+];
+
+let selectedType = TYPES[0], qty = 1, sessionCount = 0, sessionCents = 0;
+
+function buildGrid() {
+  const grid = document.getElementById('bottleGrid');
+  TYPES.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'bottle-card' + (i === 0 ? ' selected' : '');
+    card.id = `bc-${t.id}`;
+    card.onclick = () => selectType(t);
+    card.innerHTML = `
+      <div class="bc-check">✓</div>
+      <div class="bc-top"><span class="bc-emoji">${t.emoji}</span><span class="bc-pfand">${t.pfand.toFixed(2).replace('.',',')} €</span></div>
+      <div class="bc-name">${t.name}</div>
+      <div class="bc-desc">${t.desc}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+function selectType(t) {
+  selectedType = t;
+  document.querySelectorAll('.bottle-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`bc-${t.id}`).classList.add('selected');
+  updateSummary();
+}
+
+function changeQty(d) {
+  qty = Math.max(1, Math.min(100, qty + d));
+  document.getElementById('qtyNum').textContent = qty;
+  updateSummary();
+}
+
+function updateSummary() {
+  const total = selectedType.pfand * qty;
+  document.getElementById('qtyHint').textContent = `= ${total.toFixed(2).replace('.',',')} €`;
+  document.getElementById('sumType').textContent = selectedType.emoji + ' ' + selectedType.name;
+  document.getElementById('sumQty').textContent = qty + ' Stück';
+  document.getElementById('sumPfand').textContent = selectedType.pfand.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('sumTotal').textContent = total.toFixed(2).replace('.',',') + ' €';
+}
+
+function pay() {
+  const name  = document.getElementById('nameInput').value.trim() || 'Anonym';
+  const total = selectedType.pfand * qty;
+  window.open(`https://www.paypal.com/paypalme/${PAYPAL_ME}/${total.toFixed(2)}`, '_blank');
+  showSuccess(name, total);
+}
+
+function simulate() {
+  showSuccess(document.getElementById('nameInput').value.trim() || 'Anonym', selectedType.pfand * qty);
+}
+
+function showSuccess(name, total) {
+  sessionCount += qty;
+  sessionCents += Math.round(total * 100);
+  document.getElementById('tickerCount').textContent = sessionCount + ' Flaschen';
+  document.getElementById('tickerTotal').textContent = (sessionCents/100).toFixed(2).replace('.',',') + ' €';
+  document.getElementById('successMsg').innerHTML =
+    `<strong style="color:var(--purple2)">${name}</strong> hat ${qty}× ${selectedType.emoji} ${selectedType.name} eingeworfen!<br>
+     Das sind <strong style="color:var(--light)">${total.toFixed(2).replace('.',',')} €</strong> Pfand. Danke! ♥`;
+  document.getElementById('mainForm').style.display = 'none';
+  document.getElementById('successScreen').classList.add('show');
+  for (let i = 0; i < Math.min(qty, 12); i++) setTimeout(() => spawnFloater(selectedType.emoji), i * 80);
+  try {
+    const list = JSON.parse(localStorage.getItem('pfand_donations') || '[]');
+    const donation = { name, qty, type: selectedType, total, ts: Date.now() };
+    list.push(donation);
+    localStorage.setItem('pfand_donations', JSON.stringify(list));
+    localStorage.setItem('pfand_latest', JSON.stringify(donation));
+  } catch(e) {}
+}
+
+function spawnFloater(emoji) {
+  const el = document.createElement('div');
+  el.className = 'float-bottle';
+  el.textContent = emoji;
+  el.style.left = (10 + Math.random() * 80) + 'vw';
+  el.style.bottom = '10vh';
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+function reset() {
+  qty = 1; selectedType = TYPES[0];
+  document.getElementById('qtyNum').textContent = '1';
+  document.getElementById('nameInput').value = '';
+  document.getElementById('msgInput').value = '';
+  document.querySelectorAll('.bottle-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`bc-${TYPES[0].id}`).classList.add('selected');
+  document.getElementById('mainForm').style.display = '';
+  document.getElementById('successScreen').classList.remove('show');
+  updateSummary();
+}
+
+buildGrid();
+updateSummary();
+</script>
+</body>
+</html>
