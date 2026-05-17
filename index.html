@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTLVL · Tip</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;500;700&display=swap');
+
+:root {
+  --bg:      #12101a;
+  --card:    #1e1b2e;
+  --border:  #2e2850;
+  --purple:  #7c3aed;
+  --purple2: #9b59ff;
+  --light:   #a78bfa;
+  --text:    #ffffff;
+  --muted:   #7c6fa0;
+  --red:     #ff4455;
+  --green:   #00cc88;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Raster */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(124,58,237,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(12,10,20,0.75) 100%);
+  pointer-events: none; z-index: 0;
+}
+
+.wrap {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 420px;
+  animation: fadeUp 0.5s ease both;
+}
+
+/* ── HEADER ── */
+.header { text-align: center; margin-bottom: 32px; }
+.header-icon {
+  width: 60px; height: 60px;
+  margin: 0 auto 16px;
+  background: rgba(124,58,237,0.12);
+  border: 2px solid var(--purple);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 0 28px rgba(124,58,237,0.3);
+}
+.support-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem; letter-spacing: 5px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 6px;
+}
+.header-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 4rem; font-weight: 900;
+  letter-spacing: 3px; line-height: 1;
+  margin-bottom: 8px;
+}
+.header-title .ot  { color: #fff; }
+.header-title .lvl { color: var(--purple2); }
+.header-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--muted);
+}
+.header-sub span { color: var(--light); }
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── FIELD ── */
+.field-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.62rem; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.field-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.field-input {
+  width: 100%; padding: 13px 16px;
+  background: rgba(0,0,0,0.3);
+  border: 1.5px solid var(--border); border-radius: 10px;
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 0.95rem;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field-input::placeholder { color: var(--muted); }
+.field-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+
+/* ── BETRAG SCHNELLWAHL ── */
+.amounts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.amt-btn {
+  padding: 10px 4px;
+  background: transparent;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.15s;
+}
+.amt-btn:hover { border-color: var(--purple); color: var(--light); background: rgba(124,58,237,0.06); }
+.amt-btn.active { border-color: var(--purple2); color: #fff; background: rgba(124,58,237,0.15); }
+
+/* amount input wrapper */
+.amount-wrap {
+  position: relative;
+}
+.amount-wrap .euro {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--purple2); font-weight: 700; font-size: 1rem;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.amount-wrap .field-input { padding-left: 30px; font-size: 1.1rem; font-weight: 700; }
+
+/* ── BUTTON ── */
+.pay-btn {
+  width: 100%; padding: 16px;
+  background: var(--purple); color: #fff;
+  border: none; border-radius: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.4rem; font-weight: 900;
+  letter-spacing: 4px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.18s;
+  box-shadow: 0 4px 24px rgba(124,58,237,0.4);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.pay-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
+}
+.pay-btn:hover { background: var(--purple2); box-shadow: 0 6px 32px rgba(124,58,237,0.6); transform: translateY(-2px); }
+.pay-btn:active { transform: scale(0.98); }
+.pay-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; box-shadow: none; transform: none; }
+
+.pay-btn.loading::after {
+  content: '';
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── PAYMENT ICONS ── */
+.pay-icons {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 4px;
+}
+.pay-icons span {
+  font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); font-family: 'Barlow Condensed', sans-serif;
+}
+
+/* ── SUCCESS ── */
+.success {
+  display: none; text-align: center; padding: 20px 0;
+  animation: fadeUp 0.5s ease both;
+}
+.success.show { display: block; }
+.success-icon { font-size: 3.5rem; margin-bottom: 16px; animation: bounce 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes bounce { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.success h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2.5rem; font-weight: 900; letter-spacing: 3px;
+  color: var(--green); margin-bottom: 8px;
+}
+.success p { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+.back-btn {
+  margin-top: 20px; padding: 10px 28px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 10px;
+  color: var(--text); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.back-btn:hover { border-color: var(--purple2); color: var(--purple2); }
+
+/* ── ERROR ── */
+.error-msg {
+  display: none; padding: 10px 14px;
+  background: rgba(255,68,85,0.08);
+  border: 1px solid rgba(255,68,85,0.2); border-radius: 8px;
+  color: var(--red); font-size: 0.82rem;
+}
+.error-msg.show { display: block; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+footer {
+  margin-top: 28px; text-align: center;
+  font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Barlow Condensed', sans-serif;
+  position: relative; z-index: 1;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-icon">♥</div>
+    <div class="support-label">Support · Tip</div>
+    <div class="header-title"><span class="ot">OT</span><span class="lvl">LVL</span></div>
+    <div class="header-sub">Freiwillig · <span>Danke!</span> ♥</div>
+  </div>
+
+  <div class="card" id="mainCard">
+
+    <!-- NAME -->
+    <div>
+      <div class="field-label">Dein Name</div>
+      <input class="field-input" id="nameInput" type="text" placeholder="TwitchUsername oder Anonym" maxlength="40">
+    </div>
+
+    <!-- BETRAG -->
+    <div>
+      <div class="field-label">Betrag</div>
+      <div class="amounts-grid">
+        <button class="amt-btn" onclick="setAmount(1)">1 €</button>
+        <button class="amt-btn" onclick="setAmount(2)">2 €</button>
+        <button class="amt-btn" onclick="setAmount(5)">5 €</button>
+        <button class="amt-btn" onclick="setAmount(10)">10 €</button>
+      </div>
+      <div class="amount-wrap">
+        <span class="euro">€</span>
+        <input class="field-input" id="amountInput" type="number" min="1" step="0.50" placeholder="Eigener Betrag">
+      </div>
+    </div>
+
+    <!-- NACHRICHT -->
+    <div>
+      <div class="field-label">Nachricht (optional)</div>
+      <input class="field-input" id="msgInput" type="text" placeholder="Schreib dem Streamer was..." maxlength="100">
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- BUTTON -->
+    <button class="pay-btn" id="payBtn" onclick="checkout()">
+      Jetzt Tippen ▶
+    </button>
+
+    <div class="pay-icons">
+      <span>Kreditkarte · PayPal · Apple Pay · Google Pay</span>
+    </div>
+
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="successScreen">
+    <div class="success-icon">💜</div>
+    <h2>Danke!</h2>
+    <p id="successMsg">Dein Tip ist angekommen!<br>Der Streamer sieht es gleich.</p>
+    <button class="back-btn" onclick="reset()">← Nochmal tippen</button>
+  </div>
+
+  <footer>Sichere Zahlung via Stripe · OTLVL</footer>
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://oqbvqcruqwmxlboyyvzw.supabase.co';
+const CHECKOUT_FN   = `${SUPABASE_URL}/functions/v1/stripe-checkout`;
+
+// Schnellwahl
+function setAmount(val) {
+  document.getElementById('amountInput').value = val;
+  document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+document.getElementById('amountInput').addEventListener('input', () => {
+  document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('active'));
+});
+
+async function checkout() {
+  const name    = document.getElementById('nameInput').value.trim() || 'Anonym';
+  const amount  = parseFloat(document.getElementById('amountInput').value);
+  const message = document.getElementById('msgInput').value.trim();
+  const btn     = document.getElementById('payBtn');
+  const errEl   = document.getElementById('errorMsg');
+
+  errEl.classList.remove('show');
+
+  if (!amount || amount < 1) {
+    errEl.textContent = 'Bitte mindestens 1 € eingeben.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = '';
+
+  try {
+    const res  = await fetch(CHECKOUT_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, name, message })
+    });
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Fehler beim Erstellen der Zahlung');
+    }
+  } catch (e) {
+    errEl.textContent = 'Fehler: ' + e.message;
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = 'Jetzt Tippen ▶';
+  }
+}
+
+// Success nach Stripe Redirect
+const params = new URLSearchParams(window.location.search);
+if (params.get('success')) {
+  document.getElementById('mainCard').style.display = 'none';
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function reset() {
+  document.getElementById('mainCard').style.display = '';
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('amountInput').value = '';
+  document.getElementById('nameInput').value = '';
+  document.getElementById('msgInput').value = '';
+  document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('active'));
+  window.history.replaceState({}, '', window.location.pathname);
+}
+</script>
+</body>
+</html>
